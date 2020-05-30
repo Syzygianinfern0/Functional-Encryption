@@ -9,8 +9,8 @@ import psycopg2
 from .utils import exp, is_scalar, Serializable
 
 DATABASE = "discretelogarithm"
-USER = "syzygianinfern0"
-PASSWORD = "andrewng"
+USER = "dbuser"
+PASSWORD = "password"
 
 assert (
     'PYTHONHASHSEED' in os.environ and os.environ['PYTHONHASHSEED'] == '0'
