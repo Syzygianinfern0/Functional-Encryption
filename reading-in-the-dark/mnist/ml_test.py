@@ -2,7 +2,11 @@
 Picks a random MNIST test set digit and runs encryption and Quadratic
 evaluation on it.
 """
-import setup
+
+import random
+
+import numpy as np
+from sklearn.datasets import fetch_openml
 
 from core import (
     discretelogarithm,
@@ -20,7 +24,7 @@ vector_length = 784
 k = 250
 classes = 10
 model = 'objects/ml_models/final.mlm'
-mnist = fetch_mldata('MNIST original')
+mnist = fetch_openml('mnist_784')
 X, y = mnist["data"].astype('float'), mnist["target"].astype('float')
 X_test, y_test = X[60000:], y[60000:]
 
