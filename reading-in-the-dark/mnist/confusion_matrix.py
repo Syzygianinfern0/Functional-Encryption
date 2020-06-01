@@ -7,13 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sn
-from sklearn.datasets import fetch_mldata
+from sklearn.datasets import fetch_openml
 
 from core import models
 
 model = models.MLModel(source="objects/ml_models/final.mlm")
 
-mnist = fetch_mldata('MNIST original')
+mnist = fetch_openml('mnist_784')
 X, y = mnist["data"], mnist["target"].astype('int')
 X_test_, y_test = X[60000:], y[60000:]
 X_test = np.ones((10000, 785))
