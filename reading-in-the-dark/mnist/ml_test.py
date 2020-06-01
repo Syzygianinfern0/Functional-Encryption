@@ -10,14 +10,9 @@ from sklearn.datasets import fetch_openml
 
 from core import (
     discretelogarithm,
-    make_keys,
     models,
     scheme
 )
-import numpy as np
-import os
-import random
-from sklearn.datasets import fetch_mldata
 
 inst = 'objects/instantiations/MNT159.inst'
 vector_length = 784

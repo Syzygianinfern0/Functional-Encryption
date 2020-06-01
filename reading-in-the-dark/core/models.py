@@ -3,8 +3,10 @@ Defines classes that represent vectors (encrypted or not), cryptographic keys
 and machine learning models as well as useful methods on them.
 """
 from math import log2
+
 import numpy as np
-from .utils import batch_exp, exp, is_array, is_scalar, Serializable
+
+from .utils import batch_exp, is_array, is_scalar, Serializable
 
 
 # Vectors
@@ -14,7 +16,6 @@ class WrongInputError(BaseException):
 
 
 class Vector(Serializable):
-
     ext_ = 'vec'
 
     def __init__(self, array=None, source=''):
@@ -23,7 +24,7 @@ class Vector(Serializable):
             return
         if is_array(array):
             assert (
-                len(array) > 0
+                    len(array) > 0
             ), (
                 'Trying to generate an image from an empty vector.'
             )
@@ -37,16 +38,15 @@ class Vector(Serializable):
 
 
 class EncryptedVector(Serializable):
-
     ext_ = 'evec'
 
     def __init__(
-        self,
-        group=None,
-        simplifier=None,
-        left=None,
-        right=None,
-        source=''
+            self,
+            group=None,
+            simplifier=None,
+            left=None,
+            right=None,
+            source=''
     ):
         if source:
             self.fromFile(source)
@@ -58,7 +58,7 @@ class EncryptedVector(Serializable):
         assert is_array(left)
         assert is_array(right)
         assert (
-            len(left) == len(right)
+                len(left) == len(right)
         ), (
             'Ciphertext was not properly generated.'
         )
@@ -87,11 +87,11 @@ class EncryptedVector(Serializable):
                 out[cl] *= batch[cl]
         return out
 
+
 # Keys
 
 
 class PublicKey(Serializable):
-
     ext_ = 'pk'
 
     def __init__(self, group=None, h1=None, h2=None, source=''):
@@ -110,7 +110,6 @@ class PublicKey(Serializable):
 
 
 class MasterKey(PublicKey):
-
     ext_ = 'msk'
 
     def __init__(self, pk=None, s=None, t=None, source=''):
@@ -129,7 +128,6 @@ class MasterKey(PublicKey):
 
 
 class DecryptionKey(Serializable):
-
     ext_ = 'dk'
 
     def __init__(self, model=None, skf=None, source=''):
@@ -158,11 +156,11 @@ class DecryptionKey(Serializable):
         del self.model_
         return self
 
+
 # ML
 
 
 class Projection(Serializable):
-
     ext_ = 'proj'
 
     def __init__(self, matrix=None, source=''):
@@ -223,7 +221,6 @@ class Projection(Serializable):
 
 
 class DiagonalQuadraticForms(Serializable):
-
     ext_ = 'dqf'
 
     def __init__(self, matrix=None, source=''):
@@ -257,7 +254,6 @@ class DiagonalQuadraticForms(Serializable):
 
 
 class MLModel(Serializable):
-
     ext_ = 'mlm'
 
     def __init__(self, proj=None, forms=None, source=''):
@@ -312,7 +308,7 @@ class MLModel(Serializable):
         for j in range(self.proj.k):
             neg = sum([255 * p if p < 0 else 0 for p in P[j][1:]]) + P[j][0]
             pos = sum([255 * p if p > 0 else 0 for p in P[j][1:]]) + P[j][0]
-            maxes.append(max(-neg, pos)**2)
+            maxes.append(max(-neg, pos) ** 2)
         largest = 0
         lowest = 0
         matrix = np.transpose(self.forms.content)
@@ -341,13 +337,13 @@ class MLModel(Serializable):
         assert self.proj.n == 785, 'get_accuracy only works for mnist'
         from tensorflow.examples.tutorials.mnist import input_data
         mnist = input_data.read_data_sets("/tmp/data/")
-        X_test_ = np.round(255*mnist.test.images)
+        X_test_ = np.round(255 * mnist.test.images)
         y_test = mnist.test.labels.astype("int")
         X_test = np.ones((10000, 785))
         X_test[:, 1:] = X_test_
         good = 0
         for i in range(10000):
             good += 1 if (
-                np.argmax(self.evaluate(X_test[i])) == y_test[i]
+                    np.argmax(self.evaluate(X_test[i])) == y_test[i]
             ) else 0
-        print('Accuracy: {}%'.format(good/100))
+        print('Accuracy: {}%'.format(good / 100))

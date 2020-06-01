@@ -2,14 +2,14 @@
 This should be the first file you run. Generates your master secret key and the
 corresponding public key, and fills the database with precomputations.
 """
-import setup
+
+import os
 
 from core import (
     discretelogarithm,
     make_keys,
     scheme,
 )
-import os
 
 inst = 'objects/instantiations/MNT159.inst'
 model = 'objects/ml_models/final.mlm'

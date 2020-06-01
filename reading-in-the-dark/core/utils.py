@@ -1,7 +1,13 @@
 """
 Contains various basic utilities used throughout the project.
 """
+import collections
+import json
+import os
+import zlib
 from base64 import b64encode, b64decode
+
+import numpy as np
 from charm.core.engine.util import (
     serializeObject,
     deserializeObject,
@@ -9,11 +15,6 @@ from charm.core.engine.util import (
     from_json
 )
 from charm.toolbox.pairinggroup import PairingGroup
-import collections
-import json
-import numpy as np
-import os
-import zlib
 
 
 # Base class handles some of the trouble of saving objects to a file.
@@ -49,11 +50,11 @@ class Serializable:
         encoded = b64encode(compressed)
         final = encoded.decode('utf-8')
         with open(
-            os.path.join(
-                path,
-                '{}.{}'.format(title, self.ext_),
-            ),
-            'w',
+                os.path.join(
+                    path,
+                    '{}.{}'.format(title, self.ext_),
+                ),
+                'w',
         ) as f:
             f.write(final)
 
@@ -99,10 +100,10 @@ def exp(g, x):
 def fast_exp_const_time(g, X, xmin=0, xmax=255):
     curr = exp(g, xmin)
     precomp = [curr]
-    for i in range(xmax-xmin):
+    for i in range(xmax - xmin):
         curr *= g
         precomp.append(curr)
-    return [precomp[x-xmin] for x in X]
+    return [precomp[x - xmin] for x in X]
 
 
 # Compute the g^X where X are ints of at most nbits bits.
@@ -111,7 +112,7 @@ def batch_exp(g, X, nbits):
     one = g ** 0
     powers = [g]
     curr = g
-    for b in range(nbits-1):
+    for b in range(nbits - 1):
         curr = curr * curr
         powers.append(curr)
     out = []

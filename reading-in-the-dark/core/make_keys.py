@@ -5,10 +5,10 @@ from .scheme import ML_DGP
 
 
 def make_keys(
-    vector_length,
-    inst,
-    name='common',
-    path='',
+        vector_length,
+        inst,
+        name='common',
+        path='',
 ):
     scheme = ML_DGP(inst)
     pk, msk = scheme.setup(vector_length=vector_length)

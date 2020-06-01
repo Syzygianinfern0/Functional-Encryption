@@ -5,15 +5,17 @@ Database credentials are defined here.
 """
 import math
 import os
+
 import psycopg2
-from .utils import exp, is_scalar, Serializable
+
+from .utils import exp, is_scalar
 
 DATABASE = "discretelogarithm"
 USER = "dbuser"
 PASSWORD = "password"
 
 assert (
-    'PYTHONHASHSEED' in os.environ and os.environ['PYTHONHASHSEED'] == '0'
+        'PYTHONHASHSEED' in os.environ and os.environ['PYTHONHASHSEED'] == '0'
 ), (
     """Please disable hash randomization by entering "export PYTHONHASHSEED=0"
     into your shell."""
@@ -26,12 +28,12 @@ class PreCompBabyStepGiantStep:
     ext_ = 'bsgs'
 
     def __init__(
-        self,
-        groupObj=None,
-        base=None,
-        minimum=0,
-        maximum=0,
-        step=0,
+            self,
+            groupObj=None,
+            base=None,
+            minimum=0,
+            maximum=0,
+            step=0,
     ):
         assert is_scalar(minimum)
         assert is_scalar(maximum)
@@ -39,8 +41,8 @@ class PreCompBabyStepGiantStep:
         assert not step < 0
         self.group = groupObj
         self.base = base
-        self.minimum = math.floor(minimum/step)*(step)
-        self.maximum = math.ceil(maximum//step)*(step)
+        self.minimum = math.floor(minimum / step) * (step)
+        self.maximum = math.ceil(maximum // step) * (step)
         self.step = step
 
         self.table = 'dlogs{}'.format(hash(self.base))
@@ -89,58 +91,58 @@ class PreCompBabyStepGiantStep:
         i = 1
         mult = exp(self.base, self.step)
 
-        total = (self.maximum-self.minimum)//self.step + 1
+        total = (self.maximum - self.minimum) // self.step + 1
         preparation = (
-            'prepare ins as insert into'
-            ' {}(hash, log) values '.format(self.table) +
-            ','.join(
-                [
-                    '(${}, ${})'.format(
-                        2*i+1,
-                        2*(i+1)
-                    ) for i in range(batch_size)
-                ]
-            ) + ';'
+                'prepare ins as insert into'
+                ' {}(hash, log) values '.format(self.table) +
+                ','.join(
+                    [
+                        '(${}, ${})'.format(
+                            2 * i + 1,
+                            2 * (i + 1)
+                        ) for i in range(batch_size)
+                    ]
+                ) + ';'
         )
         cursor.execute(preparation)
         z = self.group.random()
-        one = z/z
+        one = z / z
         curr = self.base ** (self.minimum * one)
-        for i in range(total//batch_size):
+        for i in range(total // batch_size):
             L = []
             for j in range(batch_size):
-                if (i*batch_size+j) % 100000 == 0:
+                if (i * batch_size + j) % 100000 == 0:
                     print(
                         'Precomputation step {} out of {}.'.format(
-                            i*batch_size+j,
+                            i * batch_size + j,
                             total
                         )
                     )
-                    ratio = (i*batch_size+j) / int(total)
+                    ratio = (i * batch_size + j) / int(total)
                     print(
                         '|' +
-                        '='*(round(40*ratio)) +
-                        ' '*(40 - round(40*ratio)) +
-                        '| {}%'.format(round(ratio*100))
+                        '=' * (round(40 * ratio)) +
+                        ' ' * (40 - round(40 * ratio)) +
+                        '| {}%'.format(round(ratio * 100))
                     )
                 h = hash(curr)
                 L.append(h)
-                L.append(self.minimum+self.step*(i*batch_size+j))
+                L.append(self.minimum + self.step * (i * batch_size + j))
                 curr *= mult
             ins = 'execute ins (' + ','.join([str(x) for x in L]) + ');'
             cursor.execute(ins)
-            if (i*batch_size) % 1000000 == 0:
+            if (i * batch_size) % 1000000 == 0:
                 conn.commit()
         conn.commit()
-        k = (total//batch_size) * batch_size
-        while k < total+1:
+        k = (total // batch_size) * batch_size
+        while k < total + 1:
             curr *= mult
             h = hash(curr)
             cursor.execute(
                 'insert into {}(hash, log) values ({}, {})'.format(
                     self.table,
                     h,
-                    self.minimum+self.step*k
+                    self.minimum + self.step * k
                 )
             )
             k += 1
@@ -166,7 +168,7 @@ class PreCompBabyStepGiantStep:
 
     def solve(self, target):
         assert (
-            type(self.base) == type(target)
+                type(self.base) == type(target)
         ), (
             'Element and base are not the same type.'
         )

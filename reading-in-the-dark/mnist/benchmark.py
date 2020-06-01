@@ -2,18 +2,6 @@
 Runs encryption and decryption on the entire MNIST test set, and reports
 timings.
 """
-import setup
-
-from charm.toolbox.pairinggroup import pair
-from core import (
-    discretelogarithm,
-    models,
-    scheme,
-)
-import numpy as np
-import os
-from sklearn.datasets import fetch_mldata
-import timeit
 
 assert False, 'Remember to run with -O for optimized results.'
 
@@ -39,7 +27,6 @@ print('Importing model.')
 ml = models.MLModel(source=model)
 print('Done!\n')
 
-
 print('Importing discrete logarithm.')
 
 dlog = discretelogarithm.PreCompBabyStepGiantStep(
@@ -63,7 +50,6 @@ msk = models.MasterKey(
     source='objects/msk/common_{}.msk'.format(vector_length)
 )
 print('Done!\n')
-
 
 biased = np.ones(785)
 
@@ -119,13 +105,13 @@ for i in range(len(X_test)):
         errors += 1
     if total % 5 == 0:
         print('\n\n')
-        print('-'*40)
+        print('-' * 40)
         print('Running stats:')
         print('Total error-free samples: {}'.format(total))
-        print('Average encryption time: {}s.'.format(enc_total/(total)))
-        print('Average evaluation time: {}s.'.format(eval_total/(total)))
-        print('Average dlog time: {}s.'.format(dlog_total/(total)))
+        print('Average encryption time: {}s.'.format(enc_total / (total)))
+        print('Average evaluation time: {}s.'.format(eval_total / (total)))
+        print('Average dlog time: {}s.'.format(dlog_total / (total)))
         print('Average accuracy: {}.'.format(100 * correct / (total)))
         print('Total errors: {}.'.format(errors))
-        print('-'*40)
+        print('-' * 40)
         print('\n\n')

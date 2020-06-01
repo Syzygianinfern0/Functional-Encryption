@@ -2,14 +2,14 @@
 Generates the confusion matrix for the provided model using cleartext
 evaluation.
 """
-import setup
 
-from core import models
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sn
 from sklearn.datasets import fetch_mldata
+
+from core import models
 
 model = models.MLModel(source="objects/ml_models/final.mlm")
 
@@ -26,7 +26,6 @@ for i in range(10000):
     value = y_test[i]
     pred = predictions[i]
     M[value][pred] += 1
-
 
 conf_mat = pd.DataFrame(
     M,

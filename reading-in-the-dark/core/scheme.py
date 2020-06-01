@@ -5,19 +5,17 @@ Classifying Encrypted Digits with Functional Encryption."
 https://eprint.iacr.org/2018/206
 """
 from charm.toolbox.pairinggroup import ZR, G1, G2, pair
-from .discretelogarithm import PreCompBabyStepGiantStep
+
 from .models import (
     DecryptionKey,
     EncryptedVector,
     MasterKey,
-    MLModel,
     PublicKey
 )
-from .utils import exp, fast_exp_const_time, is_array, Serializable
+from .utils import fast_exp_const_time, Serializable
 
 
 class ML_DGP(Serializable):
-
     ext_ = 'inst'
 
     def __init__(self, source=''):
@@ -42,8 +40,8 @@ class ML_DGP(Serializable):
 
     def setup(self, vector_length=1):
         assert vector_length > 0, 'Vector size must be positive.'
-        s = [self.group.random(ZR) for i in range(vector_length+1)]
-        t = [self.group.random(ZR) for i in range(vector_length+1)]
+        s = [self.group.random(ZR) for i in range(vector_length + 1)]
+        t = [self.group.random(ZR) for i in range(vector_length + 1)]
         h1 = [self.g1 ** si for si in s]
         h2 = [self.g2 ** ti for ti in t]
         pk = PublicKey(self.group, h1, h2)
@@ -52,7 +50,7 @@ class ML_DGP(Serializable):
 
     def encrypt(self, pk, vector):
         assert (
-            pk.n == vector.n + 1
+                pk.n == vector.n + 1
         ), (
             'Vector has length {}, key is for length {}.'.format(
                 vector.n,
@@ -94,14 +92,14 @@ class ML_DGP(Serializable):
         for i in range(1, pk.n):
             left.append(
                 [
-                    exp_g1_inva[i-1] * (pk.h1[i] ** (gamma * inv_c)),
-                    exp_g1_invb[i-1] * (pk.h1[i] ** (gamma * inv_d))
+                    exp_g1_inva[i - 1] * (pk.h1[i] ** (gamma * inv_c)),
+                    exp_g1_invb[i - 1] * (pk.h1[i] ** (gamma * inv_d))
                 ]
             )
             right.append(
                 [
-                    exp_g2_a[i-1] * (pk.h2[i] ** (-b)),
-                    exp_g2_c[i-1] * (pk.h2[i] ** (-d))
+                    exp_g2_a[i - 1] * (pk.h2[i] ** (-b)),
+                    exp_g2_c[i - 1] * (pk.h2[i] ** (-d))
                 ]
             )
         return EncryptedVector(
