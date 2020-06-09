@@ -1,18 +1,22 @@
 """
 Implementation of Quadratic Functional Encryption for ML models as defined in
-Edouard Dufour Sans, Romain Gay, and David Pointcheval. "Reading in the Dark:
-Classifying Encrypted Digits with Functional Encryption."
-https://eprint.iacr.org/2018/206
-"""
-from charm.toolbox.pairinggroup import ZR, G1, G2, pair
+Edouard Dufour Sans, Romain Gay, and David Pointcheval.
 
-from .models import (
-    DecryptionKey,
-    EncryptedVector,
-    MasterKey,
-    PublicKey
-)
-from .utils import fast_exp_const_time, Serializable
+"Reading in the Dark: Classifying Encrypted Digits with Functional
+Encryption." https://eprint.iacr.org/2018/206
+
+"""
+from charm.toolbox.pairinggroup import G1
+from charm.toolbox.pairinggroup import G2
+from charm.toolbox.pairinggroup import ZR
+from charm.toolbox.pairinggroup import pair
+
+from .models import DecryptionKey
+from .models import EncryptedVector
+from .models import MasterKey
+from .models import PublicKey
+from .utils import Serializable
+from .utils import fast_exp_const_time
 
 
 class ML_DGP(Serializable):
@@ -49,13 +53,8 @@ class ML_DGP(Serializable):
         return (pk, msk)
 
     def encrypt(self, pk, vector):
-        assert (
-                pk.n == vector.n + 1
-        ), (
-            'Vector has length {}, key is for length {}.'.format(
-                vector.n,
-                pk.n - 1
-            )
+        assert pk.n == vector.n + 1, 'Vector has length {}, key is for length {}.'.format(
+            vector.n, pk.n - 1
         )
         gamma = self.group.random(ZR)
         a = self.group.random(ZR)
@@ -78,50 +77,30 @@ class ML_DGP(Serializable):
         exp_g2_a = fast_exp_const_time(g2_a, vector.content, 0, 255)
         exp_g2_c = fast_exp_const_time(g2_c, vector.content, 0, 255)
         left = [  # bias term
-            [
-                g1_inva * (pk.h1[0] ** (gamma * inv_c)),
-                g1_invb * (pk.h1[0] ** (gamma * inv_d))
-            ]
+            [g1_inva * (pk.h1[0] ** (gamma * inv_c)), g1_invb * (pk.h1[0] ** (gamma * inv_d))]
         ]
-        right = [  # bias term
-            [
-                g2_a * (pk.h2[0] ** (-b)),
-                g2_c * (pk.h2[0] ** (-d))
-            ]
-        ]
+        right = [[g2_a * (pk.h2[0] ** (-b)), g2_c * (pk.h2[0] ** (-d))]]  # bias term
         for i in range(1, pk.n):
             left.append(
                 [
                     exp_g1_inva[i - 1] * (pk.h1[i] ** (gamma * inv_c)),
-                    exp_g1_invb[i - 1] * (pk.h1[i] ** (gamma * inv_d))
+                    exp_g1_invb[i - 1] * (pk.h1[i] ** (gamma * inv_d)),
                 ]
             )
             right.append(
-                [
-                    exp_g2_a[i - 1] * (pk.h2[i] ** (-b)),
-                    exp_g2_c[i - 1] * (pk.h2[i] ** (-d))
-                ]
+                [exp_g2_a[i - 1] * (pk.h2[i] ** (-b)), exp_g2_c[i - 1] * (pk.h2[i] ** (-d))]
             )
         return EncryptedVector(
-            group=self.group,
-            simplifier=self.g1 ** gamma,
-            left=left,
-            right=right,
+            group=self.group, simplifier=self.g1 ** gamma, left=left, right=right,
         )
 
     def keygen(self, msk, model):
-        return DecryptionKey(
-            model=model,
-            skf=[self.g2 ** x for x in model.evaluate(msk)],
-        )
+        return DecryptionKey(model=model, skf=[self.g2 ** x for x in model.evaluate(msk)],)
 
     def decrypt(self, pk, sk_model, c):
         evaluation = sk_model.model.evaluate(c)
         decrypted = [
-            evaluation[i] * pair(
-                c.simplifier,
-                sk_model.skf[i]
-            ) for i in range(sk_model.classes)
+            evaluation[i] * pair(c.simplifier, sk_model.skf[i]) for i in range(sk_model.classes)
         ]
         out = list(map(self.dlog.solve, decrypted))
         return out

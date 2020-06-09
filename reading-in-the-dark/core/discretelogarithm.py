@@ -1,39 +1,37 @@
 """
-Discrete logarithm class. Uses baby step giant step. Precomputations are stored
-in a postgresql database.
-Database credentials are defined here.
+Discrete logarithm class.
+
+Uses baby step giant step. Precomputations are stored in a postgresql
+database. Database credentials are defined here.
+
 """
 import math
 import os
 
 import psycopg2
 
-from .utils import exp, is_scalar
+from .utils import exp
+from .utils import is_scalar
 
-DATABASE = "discretelogarithm"
-USER = "dbuser"
-PASSWORD = "password"
+DATABASE = 'discretelogarithm'
+USER = 'dbuser'
+PASSWORD = 'password'
 
 assert (
-        'PYTHONHASHSEED' in os.environ and os.environ['PYTHONHASHSEED'] == '0'
-), (
-    """Please disable hash randomization by entering "export PYTHONHASHSEED=0"
+    'PYTHONHASHSEED' in os.environ and os.environ['PYTHONHASHSEED'] == '0'
+), """Please disable hash randomization by entering "export PYTHONHASHSEED=0"
     into your shell."""
-)
 
 
 class PreCompBabyStepGiantStep:
-    """ Baby Step Giant Step with precomputation of the Giant steps. """
+    """
+    Baby Step Giant Step with precomputation of the Giant steps.
+    """
 
     ext_ = 'bsgs'
 
     def __init__(
-            self,
-            groupObj=None,
-            base=None,
-            minimum=0,
-            maximum=0,
-            step=0,
+        self, groupObj=None, base=None, minimum=0, maximum=0, step=0,
     ):
         assert is_scalar(minimum)
         assert is_scalar(maximum)
@@ -45,14 +43,15 @@ class PreCompBabyStepGiantStep:
         self.maximum = math.ceil(maximum // step) * (step)
         self.step = step
 
-        self.table = 'dlogs{}'.format(hash(self.base))
+        self.table = f'dlogs{hash(self.base)}'
 
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                ("create table {} (hash bigint,"
-                 " log bigint, UNIQUE(hash, log));").format(self.table)
+                ('create table {} (hash bigint,' ' log bigint, UNIQUE(hash, log));').format(
+                    self.table
+                )
             )
             conn.commit()
         except Exception as e:
@@ -69,20 +68,16 @@ class PreCompBabyStepGiantStep:
 
         # Check if table has elements
         try:
-            cursor.execute(
-                'insert into {}(hash, log) values (1, 1)'.format(
-                    self.table,
-                )
-            )
+            cursor.execute(f'insert into {self.table}(hash, log) values (1, 1)')
             conn.commit()
         except psycopg2.IntegrityError as e:
             if e.pgcode == '23505':
                 print(
-                    "Database seems to have already been filled (at least",
-                    "partially). We do not currently support filling",
-                    "databases in multiple sessions. If you believe the",
-                    "database is incomplete, please drop the table and run",
-                    "precomputation again."
+                    'Database seems to have already been filled (at least',
+                    'partially). We do not currently support filling',
+                    'databases in multiple sessions. If you believe the',
+                    'database is incomplete, please drop the table and run',
+                    'precomputation again.',
                 )
                 return
             else:
@@ -93,16 +88,9 @@ class PreCompBabyStepGiantStep:
 
         total = (self.maximum - self.minimum) // self.step + 1
         preparation = (
-                'prepare ins as insert into'
-                ' {}(hash, log) values '.format(self.table) +
-                ','.join(
-                    [
-                        '(${}, ${})'.format(
-                            2 * i + 1,
-                            2 * (i + 1)
-                        ) for i in range(batch_size)
-                    ]
-                ) + ';'
+            f'prepare ins as insert into {self.table}(hash, log) values '
+            + ','.join(['(${}, ${})'.format(2 * i + 1, 2 * (i + 1)) for i in range(batch_size)])
+            + ';'
         )
         cursor.execute(preparation)
         z = self.group.random()
@@ -112,18 +100,13 @@ class PreCompBabyStepGiantStep:
             L = []
             for j in range(batch_size):
                 if (i * batch_size + j) % 100000 == 0:
-                    print(
-                        'Precomputation step {} out of {}.'.format(
-                            i * batch_size + j,
-                            total
-                        )
-                    )
+                    print(f'Precomputation step {i * batch_size + j} out of {total}.')
                     ratio = (i * batch_size + j) / int(total)
                     print(
-                        '|' +
-                        '=' * (round(40 * ratio)) +
-                        ' ' * (40 - round(40 * ratio)) +
-                        '| {}%'.format(round(ratio * 100))
+                        '|'
+                        + '=' * (round(40 * ratio))
+                        + ' ' * (40 - round(40 * ratio))
+                        + f'| {round(ratio * 100)}%'
                     )
                 h = hash(curr)
                 L.append(h)
@@ -140,9 +123,7 @@ class PreCompBabyStepGiantStep:
             h = hash(curr)
             cursor.execute(
                 'insert into {}(hash, log) values ({}, {})'.format(
-                    self.table,
-                    h,
-                    self.minimum + self.step * k
+                    self.table, h, self.minimum + self.step * k
                 )
             )
             k += 1
@@ -150,38 +131,24 @@ class PreCompBabyStepGiantStep:
 
     def get_conn(self):
         try:
-            return psycopg2.connect(
-                dbname=DATABASE,
-                user=USER,
-                host='localhost',
-                password=PASSWORD
-            )
+            return psycopg2.connect(dbname=DATABASE, user=USER, host='localhost', password=PASSWORD)
         except psycopg2.OperationalError as e:
             conn = psycopg2.connect(
-                dbname='postgres',
-                user=USER,
-                host='localhost',
-                password=PASSWORD)
+                dbname='postgres', user=USER, host='localhost', password=PASSWORD
+            )
             cursor = conn.cursor()
-            cursor.execute("create database discretelogarithm;")
+            cursor.execute('create database discretelogarithm;')
             return self.get_conn()
 
     def solve(self, target):
-        assert (
-                type(self.base) == type(target)
-        ), (
-            'Element and base are not the same type.'
-        )
+        assert type(self.base) == type(target), 'Element and base are not the same type.'
         curr = target
         conn = self.get_conn()
         cursor = conn.cursor()
-        cursor.execute(
-            'prepare sel as select log from '
-            '{} where hash=$1'.format(self.table)
-        )
+        cursor.execute(f'prepare sel as select log from {self.table} where hash=$1')
         for i in range(0, self.step):
             h = hash(curr)
-            cursor.execute("execute sel ({})".format(h))
+            cursor.execute(f'execute sel ({h})')
             line = cursor.fetchone()
             if not line:
                 curr *= self.base

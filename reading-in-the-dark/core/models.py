@@ -6,10 +6,13 @@ from math import log2
 
 import numpy as np
 
-from .utils import batch_exp, is_array, is_scalar, Serializable
-
+from .utils import Serializable
+from .utils import batch_exp
+from .utils import is_array
+from .utils import is_scalar
 
 # Vectors
+
 
 class WrongInputError(BaseException):
     pass
@@ -23,11 +26,7 @@ class Vector(Serializable):
             self.fromFile(source)
             return
         if is_array(array):
-            assert (
-                    len(array) > 0
-            ), (
-                'Trying to generate an image from an empty vector.'
-            )
+            assert len(array) > 0, 'Trying to generate an image from an empty vector.'
             self.n = len(array)
             self.content = []
             for s in array:
@@ -40,14 +39,7 @@ class Vector(Serializable):
 class EncryptedVector(Serializable):
     ext_ = 'evec'
 
-    def __init__(
-            self,
-            group=None,
-            simplifier=None,
-            left=None,
-            right=None,
-            source=''
-    ):
+    def __init__(self, group=None, simplifier=None, left=None, right=None, source=''):
         if source:
             self.fromFile(source)
             return
@@ -57,11 +49,7 @@ class EncryptedVector(Serializable):
         assert simplifier
         assert is_array(left)
         assert is_array(right)
-        assert (
-                len(left) == len(right)
-        ), (
-            'Ciphertext was not properly generated.'
-        )
+        assert len(left) == len(right), 'Ciphertext was not properly generated.'
         assert len(left) > 1, 'Ciphertext is empty.'
         assert (is_array(x) for x in left)
         assert (is_array(x) for x in right)
@@ -74,12 +62,7 @@ class EncryptedVector(Serializable):
         self.right = right
 
     def __pow__(self, forms):
-        paired = [
-            self.group.pair_prod(
-                self.left[i],
-                self.right[i]
-            ) for i in range(self.n)
-        ]
+        paired = [self.group.pair_prod(self.left[i], self.right[i]) for i in range(self.n)]
         out = [1 for cl in range(forms.classes)]
         for i in range(self.n):
             batch = batch_exp(paired[i], forms.content[i], forms.nbits[i])
@@ -179,11 +162,7 @@ class Projection(Serializable):
         assert (is_scalar(matrix[i][j]) for i in range(n) for j in range(k))
         self.n = n
         self.k = k
-        self.columns = [
-            [
-                int(matrix[i][j]) for j in range(k)
-            ] for i in range(n)
-        ]
+        self.columns = [[int(matrix[i][j]) for j in range(k)] for i in range(n)]
         self.nbits = []
         for j in range(n):
             m = 1
@@ -206,14 +185,10 @@ class Projection(Serializable):
                     left[i][1] *= l2[i]
                     right[i][0] *= r1[i]
                     right[i][1] *= r2[i]
-            return EncryptedVector(
-                group=X.group,
-                simplifier=X.simplifier,
-                left=left,
-                right=right,
-            )
+            return EncryptedVector(group=X.group, simplifier=X.simplifier, left=left, right=right,)
         elif is_array(X):
             import numpy as np
+
             assert self.n == len(X)
             return np.dot(np.transpose(self.columns), X)
         else:
@@ -236,14 +211,10 @@ class DiagonalQuadraticForms(Serializable):
         classes = len(matrix[0])
         assert classes
         assert (len(matrix[i]) == classes for i in range(k))
-        assert (
-            is_scalar(matrix[i][j]) for i in range(k) for j in range(classes)
-        )
+        assert (is_scalar(matrix[i][j]) for i in range(k) for j in range(classes))
         self.classes = classes
         self.k = k
-        self.content = [
-            [int(matrix[i][j]) for j in range(classes)] for i in range(k)
-        ]
+        self.content = [[int(matrix[i][j]) for j in range(classes)] for i in range(k)]
         self.nbits = []
         for j in range(k):
             m = 1
@@ -275,10 +246,7 @@ class MLModel(Serializable):
             Ps = self.proj * X.s
             Pt = self.proj * X.t
             element_wise_prod = np.multiply(Ps, Pt)
-            return np.dot(
-                np.transpose(self.forms.content),
-                element_wise_prod
-            ).tolist()
+            return np.dot(np.transpose(self.forms.content), element_wise_prod).tolist()
         elif is_array(X):
             PXsquared = np.square(self.proj * X)
             return np.dot(np.transpose(self.forms.content), PXsquared)
@@ -315,17 +283,12 @@ class MLModel(Serializable):
         for cl in range(self.forms.classes):
             neg = sum(
                 [
-                    (
-                        - maxes[j] * matrix[cl][j] if matrix[cl][j] < 0 else 0
-                    ) for j in range(self.proj.k)
+                    (-maxes[j] * matrix[cl][j] if matrix[cl][j] < 0 else 0)
+                    for j in range(self.proj.k)
                 ]
             )
             pos = sum(
-                [
-                    (
-                        maxes[j] * matrix[cl][j] if matrix[cl][j] > 0 else 0
-                    ) for j in range(self.proj.k)
-                ]
+                [(maxes[j] * matrix[cl][j] if matrix[cl][j] > 0 else 0) for j in range(self.proj.k)]
             )
             if neg > lowest:
                 lowest = neg
@@ -336,14 +299,13 @@ class MLModel(Serializable):
     def get_accuracy(self):
         assert self.proj.n == 785, 'get_accuracy only works for mnist'
         from tensorflow.examples.tutorials.mnist import input_data
-        mnist = input_data.read_data_sets("/tmp/data/")
+
+        mnist = input_data.read_data_sets('/tmp/data/')
         X_test_ = np.round(255 * mnist.test.images)
-        y_test = mnist.test.labels.astype("int")
+        y_test = mnist.test.labels.astype('int')
         X_test = np.ones((10000, 785))
         X_test[:, 1:] = X_test_
         good = 0
         for i in range(10000):
-            good += 1 if (
-                    np.argmax(self.evaluate(X_test[i])) == y_test[i]
-            ) else 0
-        print('Accuracy: {}%'.format(good / 100))
+            good += 1 if (np.argmax(self.evaluate(X_test[i])) == y_test[i]) else 0
+        print(f'Accuracy: {good / 100}%')

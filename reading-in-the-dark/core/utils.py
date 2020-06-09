@@ -5,15 +5,14 @@ import collections
 import json
 import os
 import zlib
-from base64 import b64encode, b64decode
+from base64 import b64decode
+from base64 import b64encode
 
 import numpy as np
-from charm.core.engine.util import (
-    serializeObject,
-    deserializeObject,
-    to_json,
-    from_json
-)
+from charm.core.engine.util import deserializeObject
+from charm.core.engine.util import from_json
+from charm.core.engine.util import serializeObject
+from charm.core.engine.util import to_json
 from charm.toolbox.pairinggroup import PairingGroup
 
 
@@ -25,8 +24,7 @@ class Serializable:
         d = self.__dict__.copy()
         if 'group' in d:
             del d['group']
-            return {'param': self.group.param,
-                    'rest': serializeObject(d, self.group)}
+            return {'param': self.group.param, 'rest': serializeObject(d, self.group)}
         else:
             return d
 
@@ -49,13 +47,7 @@ class Serializable:
         compressed = zlib.compress(by)
         encoded = b64encode(compressed)
         final = encoded.decode('utf-8')
-        with open(
-                os.path.join(
-                    path,
-                    '{}.{}'.format(title, self.ext_),
-                ),
-                'w',
-        ) as f:
+        with open(os.path.join(path, f'{title}.{self.ext_}',), 'w',) as f:
             f.write(final)
 
     def fromFile(self, source):
@@ -77,9 +69,9 @@ def is_array(a):
 
 
 def is_scalar(s):
-    return (isinstance(s, int) or
-            isinstance(s, np.int64) or
-            (isinstance(s, float) and s.is_integer()))
+    return (
+        isinstance(s, int) or isinstance(s, np.int64) or (isinstance(s, float) and s.is_integer())
+    )
 
 
 # Redefine exponentiation to avoid "pairing.Error: undefined exponentiation
