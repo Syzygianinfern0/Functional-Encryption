@@ -11,8 +11,8 @@ from charm.core.engine.util import serializeObject
 from charm.core.engine.util import to_json
 from charm.toolbox.pairinggroup import PairingGroup
 from exceptions import WrongInputError
-from poly_nets import DiagonalQuadraticForms
-from poly_nets import Projection
+from objects.poly_nets import DiagonalQuadraticForms
+from objects.poly_nets import Projection
 from utils import is_array
 from vectors.enc_vector import EncryptedVector
 from vectors.keys import MasterKey

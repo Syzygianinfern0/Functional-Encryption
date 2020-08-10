@@ -1,5 +1,5 @@
-from schemes.models import MLModel
-from schemes.models import Serializable
+from objects.models import MLModel
+from objects.models import Serializable
 from utils import is_array
 
 

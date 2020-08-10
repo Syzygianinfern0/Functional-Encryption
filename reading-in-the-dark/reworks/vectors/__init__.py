@@ -1,5 +1,5 @@
 from exceptions import WrongInputError
-from schemes.models import Serializable
+from objects.models import Serializable
 from utils import is_array
 from utils import is_scalar
 

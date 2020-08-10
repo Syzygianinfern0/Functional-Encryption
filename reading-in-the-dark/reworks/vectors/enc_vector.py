@@ -1,4 +1,4 @@
-from schemes.models import Serializable
+from objects.models import Serializable
 from utils import batch_exp
 from utils import is_array
 
