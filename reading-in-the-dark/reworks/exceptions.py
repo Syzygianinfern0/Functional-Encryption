@@ -1,0 +1,2 @@
+class WrongInputError(BaseException):
+    pass
