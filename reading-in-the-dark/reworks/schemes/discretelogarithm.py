@@ -9,9 +9,8 @@ import math
 import os
 
 import psycopg2
-
-from .utils import exp
-from .utils import is_scalar
+from utils import exp
+from utils import is_scalar
 
 DATABASE = 'discretelogarithm'
 USER = 'dbuser'
