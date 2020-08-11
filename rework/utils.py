@@ -25,9 +25,27 @@ def exp(g, x):
     return (g ** abs(x)) ** np.sign(x)
 
 
-# Compute the g^X where X are ints of at most nbits bits.
-# NOT CONSTANT TIME
+def fast_exp_const_time(g, X, xmin=0, xmax=255):
+    """
+    Precompute every exponentiation between xmin and xmax once and for all,
+    then use the results to compute the exponentiations in X without
+    introducing obvious timing issues.
+    """
+    curr = exp(g, xmin)
+    precomp = [curr]
+    for i in range(xmax - xmin):
+        curr *= g
+        precomp.append(curr)
+    return [precomp[x - xmin] for x in X]
+
+
 def batch_exp(g, X, nbits):
+    """
+    Compute the g^X where X are ints of at most nbits bits.
+
+    NOT CONSTANT TIME
+
+    """
     one = g ** 0
     powers = [g]
     curr = g
